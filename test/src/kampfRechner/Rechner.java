@@ -1,138 +1,136 @@
 package kampfRechner;
 
-import java.util.LinkedList;
-
 public class Rechner {
 
 	private Held angreifer;
 	private Held verteidiger;
-	private long angreiferBeginLeben;
-	private long angreiferGesamtLeben;
-	private long verteidigerBeginLeben;
-	private long verteidigerGesamtLeben;
-	private int vorbei;
-	private Prints printer;
+	private double angreiferGesamtLeben;
+	private double verteidigerGesamtLeben;
 	private int runden;
-	private LinkedList<double[]> verlusteAngreifer;
-	private LinkedList<double[]> verlusteVerteidiger;
 
+	private KampfProtokoll protokoll;
 
 	public Rechner(Held angreifer, Held verteidiger) {
-		verlusteAngreifer = new LinkedList<double[]>();
-		verlusteVerteidiger = new LinkedList<double[]>();
-		vorbei = 0;
 		this.angreifer = angreifer;
 		this.verteidiger = verteidiger;
-		printer = new Prints();
-		// attGesamtVerluste = angreifer.getHorde();
-		// deffGesamtVerluste = verteidiger.getHorde();
 	}
 
 	public String kampf() {
-		this.start(angreifer, verteidiger);
-		String ausgang = "";
 
-		while (vorbei == 0) {
-			if (angreiferGesamtLeben * 1.0 / angreiferBeginLeben < 0.3) {
-				ausgang += "Angreifer verliert! " + runden;
-				vorbei += 2;
-			} else if (verteidigerGesamtLeben * 1.0 / verteidigerBeginLeben < 0.3) {
-				ausgang += "Angreifer gewinnt! " + runden;
-				vorbei -= 1;
-			} else {
+		this.initRunde(angreifer, verteidiger);
+		double angreiferBeginLeben = angreiferGesamtLeben;
+		double verteidigerBeginLeben = verteidigerGesamtLeben;
+
+		
+		speciaCaseFirstRound(angreifer, verteidiger, angreiferBeginLeben, verteidigerBeginLeben);
+			
+		
+		
+		while (runden < 100) {
+			if (angreiferGesamtLeben * 1.0 / angreiferBeginLeben < 0.3)
+				return "Angreifer verliert! " + runden;
+			else if (verteidigerGesamtLeben * 1.0 / verteidigerBeginLeben < 0.3)
+				return "Angreifer gewinnt! " + runden;
+			else
 				this.eineRunde(angreifer, verteidiger);
-			}
-
 		}
-		return ausgang;
+		return "100 Runden erreicht! Angreifer verliert automatisch!";
 	}
 
-//	private void summiereVerluste() {
-//		double[] attHorde = angreifer.getHorde();
-//		double[] deffHorde = verteidiger.getHorde();
-//
-//		for (int att = 0; att < attHorde.length; att++) {
-//			attGesamtVerluste[att] = (long) (attGesamtVerluste[att] - attHorde[att]);
-//		}
-//		for (int deff = 0; deff < deffHorde.length; deff++) {
-//			deffGesamtVerluste[deff] = (long) (deffGesamtVerluste[deff] - deffHorde[deff]);
-//		}
-//	}
+	
+	
+	private void initRunde(Held atter, Held deffer) {
 
-	public void start(Held atter, Held deffer) {
-
-		angreiferBeginLeben = rechneGesamtLeben(atter);
-		angreiferGesamtLeben = angreiferBeginLeben;
-		verteidigerBeginLeben = rechneGesamtLeben(deffer);
-		verteidigerGesamtLeben = verteidigerBeginLeben;
 		
-		double[] EHW = angreifer.getHorde();
-		EHW[1]*= 0.1;
-		angreifer.setHorde(EHW);
 		
-		EHW =verteidiger.getHorde();
-		EHW[1]*= 0.1;
-		verteidiger.setHorde(EHW);
-		
-		// deffer.addVerteidigungsBoni(20);
-
+		protokoll = new KampfProtokoll();
+		angreiferGesamtLeben = rechneGesamtLeben(atter);
+		verteidigerGesamtLeben = rechneGesamtLeben(deffer);
 		runden = 0;
 	}
 
 	private long rechneGesamtLeben(Held zuRechnen) {
+
 		long gesamt = 0;
 		double[] horde = zuRechnen.getHorde();
 
 		for (int position = 0; position < horde.length; position++) {
 			double toAdd = horde[position] * zuRechnen.getLebensBoni() * Wesen.getEinheitenLeben(position);
 
-			if (position == 1)
+			if (position == 1) // Sonderregel für EHW!
 				toAdd *= 0.1;
 			gesamt += (long) toAdd;
-
 		}
 		return gesamt;
 	}
+	
+	private void speciaCaseFirstRound(Held atter, Held deffer, double angreiferBeginLeben,
+			double verteidigerBeginLeben) {
+
+		double altesLebenAtter = angreiferGesamtLeben;
+		double altesLebenDeffer = verteidigerGesamtLeben;
+		Held neuerAtter = new Held(atter.getAngriff(),atter.getVerteidigung(),atter.getLeben());
+		neuerAtter.setBoni(atter.getAngriffsBoni(), atter.getVerteidigungsBoni(), atter.getLebensBoni());
+		neuerAtter.setHorde(atter.getHorde());
+		
+		Held neuerDeffer = new Held(deffer.getAngriff(),deffer.getVerteidigung(),deffer.getLeben());
+		neuerDeffer.setBoni(deffer.getAngriffsBoni(), deffer.getVerteidigungsBoni(), deffer.getLebensBoni());
+		neuerDeffer.setHorde(deffer.getHorde());
+		
+		neuerDeffer.addVerteidigungsBoni(20);
+		this.eineRunde(neuerAtter, neuerDeffer);
+
+		if (angreiferGesamtLeben * 1.0 / angreiferBeginLeben < 0.3
+				|| verteidigerGesamtLeben * 1.0 / verteidigerBeginLeben < 0.3) {
+			angreifer.setHorde(neuerAtter.getHorde());
+			verteidiger.setHorde(neuerDeffer.getHorde());
+			return ;
+		}
+			
+
+		angreiferGesamtLeben = altesLebenAtter;
+		verteidigerGesamtLeben = altesLebenDeffer;
+	}
+	
+	
 
 	public void eineRunde(Held atter, Held deffer) {
 
 		double[] atterHorde = atter.getHorde();
 		double[] defferHorde = deffer.getHorde();
+		double[] oldAtterHorde = atter.getHorde();
+		double[] oldDefferHorde = deffer.getHorde();
 
 		double[] att = new double[atterHorde.length];
+		for (int addAtt = 0; addAtt < atterHorde.length; addAtt++)
+			att[addAtt] = Wesen.getEinheitenAngriff(addAtt) * atterHorde[addAtt];
 
-		for (int addAtt = 0; addAtt < atterHorde.length; addAtt++) {
-			double bonus = atter.getAngriffsBoni();
-			bonus *= Wesen.getEinheitenAngriff(addAtt);
-			bonus *= atterHorde[addAtt];
-			att[addAtt] = bonus;
-		}
 		double[] deff = new double[defferHorde.length];
+		for (int addDeff = 0; addDeff < atterHorde.length; addDeff++)
+			deff[addDeff] = Wesen.getEinheitenVerteidigung(addDeff) * defferHorde[addDeff];
 
-		for (int addDeff = 0; addDeff < defferHorde.length; addDeff++) {
-			deff[addDeff] = (defferHorde[addDeff] * deffer.getVerteidigungsBoni()
-					* Wesen.getEinheitenVerteidigung(addDeff));
-		}
-
-		double[] neuesLebenAtter = schadenAusrechnen(deff, atterHorde, atter);
+		double[] neuesLebenAtter = schadenAusrechnen(deff, atterHorde, atter, deffer.getVerteidigungsBoni());
 		atter.setHorde(this.aktualisiereHorde(atter, neuesLebenAtter, true));
-		double[] neuesLebenDeffer = schadenAusrechnen(att, defferHorde, deffer);
+		angreiferGesamtLeben = HelferMethoden.sum(neuesLebenAtter);
+
+		double[] neuesLebenDeffer = schadenAusrechnen(att, defferHorde, deffer, atter.getAngriffsBoni());
 		deffer.setHorde(this.aktualisiereHorde(deffer, neuesLebenDeffer, false));
-
-		angreiferGesamtLeben = (long) this.sum(neuesLebenAtter);
-		verteidigerGesamtLeben = (long) this.sum(neuesLebenDeffer);
-
+		verteidigerGesamtLeben = HelferMethoden.sum(neuesLebenDeffer);
 		runden++;
+
+		protokoll.addRunde(oldAtterHorde, atterHorde, oldDefferHorde, defferHorde, runden);
 	}
 
-	public double[] schadenAusrechnen(double[] schaden, double[] horde, Held deffer) {
+
+
+	public double[] schadenAusrechnen(double[] schaden, double[] horde, Held deffer, double angriffsBonus) {
 
 		double[] leben = new double[horde.length];
 		long gesamtLeben = 0;
 
 		for (int addLeben = 0; addLeben < horde.length; addLeben++) {
-			
-			double bonus = deffer.getLebensBoni();			
+
+			double bonus = deffer.getLebensBoni();
 			leben[addLeben] = (horde[addLeben] * bonus * Wesen.getEinheitenLeben(addLeben));
 			gesamtLeben += leben[addLeben];
 		}
@@ -147,8 +145,11 @@ public class Rechner {
 
 				for (int schadensEinheit = 0; schadensEinheit < 17; schadensEinheit++) {
 					if (schaden[schadensEinheit] != 0) {
-						leben[einheit] -= (anteil * schaden[schadensEinheit]
-								* Wesen.hatBonus(schadensEinheit, einheit)); // Einheitenboni
+						double att = schaden[schadensEinheit];
+						att *= Wesen.hatBonus(schadensEinheit, einheit);
+						att *= angriffsBonus;
+						att *= anteil;
+						leben[einheit] -= att; // Einheitenboni
 						// einrechnen!!
 					}
 				}
@@ -164,60 +165,21 @@ public class Rechner {
 
 		double[] horde = aktualisierter.getHorde();
 		double[] neueHorde = new double[horde.length];
-		double[] verluste = new double[horde.length];
+
 		for (int i = 0; i < 17; i++) {
 
 			neueHorde[i] = ((neuesLeben[i] / lebensBoni) / Wesen.getEinheitenLeben(i));
-			verluste[i] = horde[i] - neueHorde[i];
-		}
 
-		if (angreifer) {
-			verluste[0] = angreiferGesamtLeben;
-			verlusteAngreifer.add(verluste);
 		}
-
-		else {
-			verluste[0] = verteidigerGesamtLeben;
-			verlusteVerteidiger.add(verluste);
-		}
-
-		// printer.printHorde("abd", verluste, angreiferGesamtLeben);
 		return neueHorde;
 	}
 
-	private double sum(double[] sumUp) {
-		double sum = 0;
-		for (double toAdd : sumUp)
-			sum += toAdd;
-		return sum;
-	}
-
-	public void printVerluste() {
-		System.out.println("\n\n\n AUSGABE VERLUSTE");
-		for (double[] runden : verlusteAngreifer) {
-			printer.printHorde("Angreifer", runden, runden[0]);
-		}
-
-		for (double[] runden : verlusteVerteidiger) {
-			printer.printHorde("Verteidiger", runden, runden[0]);
-		}
-	}
-
 	public long[] getAtterHorde() {
-		return this.roundAndCut(angreifer.getHorde());
+		return HelferMethoden.roundAndCut(angreifer.getHorde());
 	}
 
 	public long[] getDeffHorde() {
-		return this.roundAndCut(verteidiger.getHorde());
+		return HelferMethoden.roundAndCut(verteidiger.getHorde());
 	}
 
-	private long[] roundAndCut(double[] toRound) {
-		long[] newArray = new long[toRound.length];
-
-		for (int count = 0; count < toRound.length; count++) {
-			newArray[count] = Math.round(toRound[count]);
-
-		}
-		return newArray;
-	}
 }

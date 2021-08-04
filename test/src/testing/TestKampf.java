@@ -2,16 +2,16 @@ package testing;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
 
 import kampfRechner.*;
 
 class TestKampf {
 
 	private Wesen wesen;
-	private double atterHorde;
-	private double defferHorde;
+	//private double atterHorde;
+	//private double defferHorde;
 	Held atter;
 	Held deffer;
 	private Rechner rechner;
@@ -81,8 +81,29 @@ class TestKampf {
 	}
 	
 	@Test
+	void test4gegen2KeinVorteil1Runde() {
+		//this.initWesen();	
+		double[] atterHorde = {0,0,25000,25000,25000,25000,0,0,0,0,0,0,0,0,0,0,0};	
+		double[] defferHorde = new double[] {0,0,0,0,0,0,0,0,0,0,0,0,1000,1000,0,0,0};		
+
+		this.setUpNoHeroes(atterHorde, defferHorde);	
+		rechner.kampf();
+
+		
+		long[] attHorde = rechner.getAtterHorde();
+		long[] deffHorde = rechner.getDeffHorde();
+		
+		long[] resultAtt =	{0,0,24213,24213,24213,24213,0,0,0,0,0,0,0,0,0,0,0};
+						  //{0,0,0		,0	,0		,0,0,0,0,0,0,0,0,0,0,0,0}
+		long[] resultDeff = {0,0,0,0,0,0,0,0,0,0,0,0,207,207,0,0,0};
+		assertEquals(equals(resultAtt,attHorde),true);
+		assertEquals(equals(resultDeff,deffHorde),true);	
+		// {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+	}
+	
+	@Test
 	void test1gegen1Vorteil() {
-		double[] atterHorde = {0,0,25000,0,0,0,0,0,0,0,0,0,0,0,0,0,0};	
+		double[] atterHorde = {0,0,20000,0,0,0,0,0,0,0,0,0,0,0,0,0,0};	
 		double[] defferHorde = new double[] {0,0,0,0,100000,0,0,0,0,0,0,0,0,0,0,0,0};		
 
 		this.setUpNoHeroes(atterHorde, defferHorde);	
@@ -92,15 +113,41 @@ class TestKampf {
 		long[] attHorde = rechner.getAtterHorde();
 		long[] deffHorde = rechner.getDeffHorde();
 		
-		long[] resultAtt =	{0,0,3880,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+		long[] resultAtt =	{0,0,800,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 						  //{0,0,0		,0	,0		,0,0,0,0,0,0,0,0,0,0,0,0}
-		long[] resultDeff = {0,0,0,0,99375,0,0,0,0,0,0,0,0,0,0,0,0};
+		long[] resultDeff = {0,0,0,0,99500,0,0,0,0,0,0,0,0,0,0,0,0};
 		assertEquals(equals(resultAtt,attHorde),true);
 		assertEquals(equals(resultDeff,deffHorde),true);	
 	}
 	
-	
-	
+	@Test
+	void testCrankygegenJaegerVorteil() {
+		double[] atterHorde = {0,1_486_585,76_110,142_260,815_825,726_551,229_070,179_141,1_848,96_255,0,0,0,0,0,0,0};	
+		double[] defferHorde = new double[] {0,796872,83590,71712,142511,35539,215713,0,0,120000,550000,0,0,0,0,0,0};		
+
+		this.initWesen();
+		//this.setUpNoHeroes(atterHorde, defferHorde);
+		atter = new Held(75,0,75);
+		atter.addAngriffsBoni(20);
+		atter.addLebensBoni(19);
+		atter.setHorde(atterHorde);
+		
+		deffer = new Held(5,0,62);
+		deffer.addVerteidigungsBoni(57.5);
+		deffer.addLebensBoni(32.5);
+		deffer.setHorde(defferHorde);
+		rechner = new Rechner(atter,deffer);
+		System.out.println(rechner.kampf());
+
+		
+		long[] attHorde = rechner.getAtterHorde();
+		long[] deffHorde = rechner.getDeffHorde();
+		
+		
+		Prints.printHorde("Angreifer", attHorde, 0);
+		Prints.printHorde("Verteidiger", deffHorde, 0);
+		//rechner.printGesamtVerluste();
+	}
 	
 	
 	
@@ -133,7 +180,6 @@ class TestKampf {
 	
 	
 	//double[] defferHorde = new double[] {0,0,83590,71712,142511,35539,215713,0,0,0,111648,0,0,0,0,0,0};
-	//long[] atterHorde = new long[] {0,1_486_585,76_110,142_260,815_825,726_551,229_070,179_141,1_848,96_255,0,0,0,0,0,0,0};
+	//long[] atterHorde = new long[] ;
 			//long[] atterHorde = new long[] {0,145611,110436,82327,463741,557562,0,129577,609034,29235,14398,429473,0,6138,59055,0,0};
-			//double[] atterHorde = new double[] {0,0,76110,142260,815825,726551,229070,179141,1848,96255,0,0,0,0,0,0,0};
 }

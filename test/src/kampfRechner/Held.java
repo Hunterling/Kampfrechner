@@ -33,12 +33,7 @@ public class Held {
 		wesen = new Wesen();
 	}
 
-//	private long rechneHordenPunkte() {
-//		for (int i = 0; i < 17; i++) {
-//			hordenPunkte += Wesen.getEinheitenPunkte(i) * horde[i];
-//		}
-//		return hordenPunkte;
-//	}
+
 
 
 

@@ -9,7 +9,7 @@ public class Prints {
 			
 	}
 	
-	public void printHorde(String name, double[] anzahl, double gesamtLeben) {
+	public static void printHorde(String name, double[] anzahl, double gesamtLeben) {
 		
 		System.out.println("Hordenaufzählung von : " + name + " mit Gesamtleben: " + gesamtLeben);
 		
